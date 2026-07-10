@@ -6,7 +6,7 @@
 
 ### Scope Note
 
-This plan is scoped to exactly what the approved MSc project form commits to: one VAE, HDBSCAN clustering, Engle–Granger cointegration, a market-neutral pairs trading strategy with adaptive volatility-based thresholds, walk-forward validation, and benchmarking against traditional pairs trading. Depth at each step is prioritised over breadth across extensions. Deferred ideas (β-VAE, temporal convolutional VAE, HMM regime conditioning, risk-parity allocation, exposure management, full turnover-cost sensitivity, component ablation, GARCH-fingerprint baseline) are preserved in a separate `future_work.md` for the Discussion and Future Work chapter.
+This plan is scoped to exactly what the approved MSc project form commits to: one VAE, HDBSCAN clustering, Engle–Granger cointegration, a market-neutral pairs trading strategy with adaptive volatility-based thresholds, walk-forward validation, and benchmarking against traditional pairs trading. Depth at each step is prioritised over breadth across extensions. Deferred ideas (β-VAE, temporal convolutional VAE, HMM regime conditioning, risk-parity allocation, exposure management, full turnover-cost sensitivity, component ablation) are preserved in a separate `future_work.md` for the Discussion and Future Work chapter.
 
 The original seventeen-step plan has been re-grouped into ten higher-level phases. No committed work has been removed; sub-steps that were previously stand-alone phases now sit beneath the consolidated phase that owns them. The collapse is purely organisational and is reflected in the proposal's Gantt chart and method narrative.
 
@@ -131,22 +131,28 @@ The original seventeen-step plan has been re-grouped into ten higher-level phase
 
 ---
 
-## Phase 9 — Benchmark Comparison: VAE vs PCA vs Correlation vs Buy-and-Hold
+## Phase 9 — Benchmark Comparison: VAE vs GARCH vs Correlation vs Buy-and-Hold
+
+> **Change from the approved proposal.** The proposal originally specified PCA as the linear-encoder
+> comparator. On the supervisor's guidance this was swapped for **GARCH**, a classical volatility model,
+> as a simpler and fairer "does the ML complexity earn its keep" baseline. The structure of Phase 9
+> (re-run the identical downstream chain with only the encoder swapped) is unchanged — only the
+> comparator itself changed.
 
 **Purpose.** Run a head-to-head comparison that isolates the contribution of the VAE encoder by running the *same* downstream pipeline with only the encoder swapped, plus a classical pairs-trading baseline and a market reference.
 
-**Important — Phase 9 is heavier than the headline summary suggests.** It is not "compute four Sharpe ratios and tabulate them." For the PCA variant, the entire Phase 1 → Phase 8 chain is re-run with the encoder swapped; for the correlation baseline and buy-and-hold, the strategy and cost model are re-applied with appropriately simplified earlier stages. The reason these variants do *not* become new top-level phases is methodological: the comparison only carries weight if the *identical codebase* is run with only the encoder swapped, so splitting them into parallel implementations would introduce differences other than the encoder and weaken the apples-to-apples claim. Renumbering this work from "Phase 16" in the previous plan to "Phase 9" here does not add scope; it makes the existing commitment legible.
+**Important — Phase 9 is heavier than the headline summary suggests.** It is not "compute four Sharpe ratios and tabulate them." For the GARCH variant, the entire Phase 1 → Phase 8 chain is re-run with the encoder swapped; for the correlation baseline and buy-and-hold, the strategy and cost model are re-applied with appropriately simplified earlier stages. The reason these variants do *not* become new top-level phases is methodological: the comparison only carries weight if the *identical codebase* is run with only the encoder swapped, so splitting them into parallel implementations would introduce differences other than the encoder and weaken the apples-to-apples claim. Renumbering this work from "Phase 16" in the previous plan to "Phase 9" here does not add scope; it makes the existing commitment legible.
 
-**Chronology — when each variant is built.** Phases 1 → 8 build and run the VAE chain end-to-end. PCA does not exist yet during these phases; the headline VAE walk-forward equity curve is finished by the end of Phase 8. Phase 9 is where PCA and the correlation baseline are built and run for the first time. Inside Phase 9, the entire Phase 1 → Phase 8 chain is re-instantiated three times: once with PCA swapping in for the frozen VAE, once with rolling-correlation top-N replacing the encoder + HDBSCAN, and once for buy-and-hold. So inside Phase 9, PCA does go through Phase 3 (HDBSCAN), Phase 4 (Engle–Granger + Johansen), Phase 6 (walk-forward), Phase 7 (persistence), Phase 8 (costs) — but only inside the Phase 9 re-runs, which happen August–September on the Gantt.
+**Chronology — when each variant is built.** Phases 1 → 8 build and run the VAE chain end-to-end. GARCH does not exist yet during these phases; the headline VAE walk-forward equity curve is finished by the end of Phase 8. Phase 9 is where the GARCH variant and the correlation baseline are built and run for the first time. Inside Phase 9, the entire Phase 1 → Phase 8 chain is re-instantiated three times: once with GARCH swapping in for the frozen VAE, once with rolling-correlation top-N replacing the encoder + HDBSCAN, and once for buy-and-hold. So inside Phase 9, GARCH does go through Phase 3 (HDBSCAN), Phase 4 (Engle–Granger + Johansen), Phase 6 (walk-forward), Phase 7 (persistence), Phase 8 (costs) — but only inside the Phase 9 re-runs, which happen August–September on the Gantt.
 
 **Sub-steps.**
 
-- *PCA variant (the linearity test).* Fit 12 principal components on the same 2015–2017 training window used for the VAE. Freeze the components. In every walk-forward rebalance, project fresh 60-day return windows through frozen PCA in place of the frozen VAE. Re-run the Phase 2 latent inspection (sector-coloured projection, permutation test, known-pairs sanity check) on the PCA components. Re-run Phase 3 HDBSCAN with its own hyperparameter pass and DBCV check, plus the bootstrap-ARI cluster stability. Re-run Phase 4 intra-cluster Engle–Granger and pair filters. Re-run the Phase 6 walk-forward pipeline. Re-run Phase 7 persistence/turnover. Re-apply the Phase 8 cost model. Output: a second equity curve directly comparable to the VAE one, because every step except the encoder is identical.
-- *Correlation baseline (the classical pairs-trading reference).* Replace the encoder and clustering with rolling-Pearson pair selection: in each rebalance window, compute pairwise return correlations across the universe, take the top-N most correlated pairs, validate each with Engle–Granger, run the Johansen robustness check on the top pairs (mirroring Phase 4 of the VAE and PCA chains so that all three active pipelines receive the same cointegration treatment), apply the same pair-quality filters, then trade with the same z-score rule and the same cost model. This is the baseline the dissertation's headline claim must beat to justify the ML pipeline. The correlation matrix is computed across the full 500-stock universe at each rebalance — this is one cheap matrix operation, not 124,750 separate computations, and matching the universe size across all three pipelines is what preserves the apples-to-apples comparison. The pre-filter exists specifically to bound the cointegration-test count and avoid the multiple-testing burden of exhaustive pairwise testing, mirroring the cluster-based pre-filter used by the VAE and PCA pipelines.
+- *GARCH variant (the classical-statistics test).* Fit a univariate GARCH(1,1) model to each stock's return series on the same 2015–2017 training window used for the VAE. For each stock, extract a small feature vector describing its volatility dynamics — persistence (α + β), long-run unconditional variance (ω / (1 − α − β)), and the mean and standard deviation of the fitted conditional-volatility series over the window — in place of the VAE's 12-number latent representation. Re-fit GARCH at every walk-forward rebalance, exactly as the frozen VAE re-encodes fresh windows. Re-run Phase 3 HDBSCAN on the GARCH feature vectors, with its own hyperparameter pass and DBCV check, plus the bootstrap-ARI cluster stability. Re-run Phase 4 intra-cluster Engle–Granger and pair filters. Re-run the Phase 6 walk-forward pipeline. Re-run Phase 7 persistence/turnover. Re-apply the Phase 8 cost model. Output: a second equity curve directly comparable to the VAE one, because every step except the encoder is identical.
+- *Correlation baseline (the classical pairs-trading reference).* Replace the encoder and clustering with rolling-Pearson pair selection: in each rebalance window, compute pairwise return correlations across the universe, take the top-N most correlated pairs, validate each with Engle–Granger, run the Johansen robustness check on the top pairs (mirroring Phase 4 of the VAE and GARCH chains so that all three active pipelines receive the same cointegration treatment), apply the same pair-quality filters, then trade with the same z-score rule and the same cost model. This is the baseline the dissertation's headline claim must beat to justify the ML pipeline. The correlation matrix is computed across the full 500-stock universe at each rebalance — this is one cheap matrix operation, not 124,750 separate computations, and matching the universe size across all three pipelines is what preserves the apples-to-apples comparison. The pre-filter exists specifically to bound the cointegration-test count and avoid the multiple-testing burden of exhaustive pairwise testing, mirroring the cluster-based pre-filter used by the VAE and GARCH pipelines.
 - *Buy-and-hold (market reference).* Track the broad market index over the same out-of-sample window with the same cost model on entry and exit only. Contextualises absolute returns of all the active strategies.
 - *Comparison.* Compare all four variants head-to-head on identical windows and identical costs across: net Sharpe, net cumulative return, max drawdown, win rate, average trade duration, turnover, and cost efficiency.
 
-**Outcome.** A definitive head-to-head comparison table proving (or disproving) the value added by the VAE-HDBSCAN framework over both the classical correlation baseline and the linear (PCA) variant of the same pipeline, with all comparisons on equal footing.
+**Outcome.** A definitive head-to-head comparison table proving (or disproving) the value added by the VAE-HDBSCAN framework over both the classical correlation baseline and the volatility-based (GARCH) variant of the same pipeline, with all comparisons on equal footing.
 
 ---
 
@@ -160,7 +166,7 @@ The original seventeen-step plan has been re-grouped into ten higher-level phase
 - Cluster composition and bootstrap-stability charts.
 - Pair lifetime heatmap and per-window attribution from Phase 7.
 - Portfolio equity curves (gross and net, overlaid with volatility proxy).
-- Benchmark comparison table (VAE vs PCA variant vs correlation baseline vs buy-and-hold).
+- Benchmark comparison table (VAE vs GARCH variant vs correlation baseline vs buy-and-hold).
 - Turnover-vs-volatility scatter and the exposure diagnostic from Phase 5.
 - Standardise visual style, axis labels, captions, and legends across all figures.
 - Organise outputs into a logical structure mapping onto the dissertation chapter plan.
@@ -181,7 +187,7 @@ Every phase above traces directly to language in the approved project form:
 - Phase 6 — "Backtesting Simulation" objective and the "adaptive framework that adapts to changing market conditions" language in the aim.
 - Phase 7 — supporting evidence for the "evolving relationships" claim in the summary.
 - Phase 8 — standard practice expected of any backtest-based dissertation; supports the "practical viability" language in the summary.
-- Phase 9 — "Performance Benchmarking" objective and the PCA contrast raised in the project summary.
+- Phase 9 — "Performance Benchmarking" objective and the linear-encoder contrast raised in the project summary (comparator updated from PCA to GARCH per supervisor guidance).
 - Phase 10 — standard write-up.
 
 Nothing in this plan exceeds the form. Everything in the form is covered.
@@ -193,7 +199,6 @@ Nothing in this plan exceeds the form. Everything in the form is covered.
 - β-VAE variant for disentangled latent representations
 - Temporal Convolutional VAE variant
 - Multi-architecture VAE ablation
-- GARCH-fingerprint baseline
 - Inverse-volatility and risk-parity portfolio allocation
 - Explicit sector-exposure management and shared-leg constraints
 - HMM-based market regime detection and regime-conditional thresholds
