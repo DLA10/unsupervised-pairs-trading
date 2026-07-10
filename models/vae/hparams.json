@@ -1,0 +1,14 @@
+{
+  "latent_dim": 12,
+  "hidden": [
+    128,
+    64
+  ],
+  "lr": 0.001,
+  "batch": 256,
+  "epochs_max": 100,
+  "patience": 10,
+  "beta": 1.0,
+  "seed": 42,
+  "best_val_loss": 43.54821980977725
+}
