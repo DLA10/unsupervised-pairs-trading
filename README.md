@@ -46,11 +46,11 @@ look-ahead-free: the model genuinely never saw the future data it's evaluated on
 | 3 | HDBSCAN clustering + stability | ✅ Done | 10 clusters, bootstrap ARI 0.86 ± 0.06; 8 stable clusters → 80 assets carried forward |
 | 4 | Cointegration + pair selection | ✅ Done | 670 pairs tested → 114 significant → **112-pair shortlist** after quality gates |
 | 5 | Trading strategy (single-pair + portfolio) | ✅ Done | Single pair (NTRS–RF): +42.8% cum., Sharpe 0.58. 10-pair portfolio: +12.3% cum., Sharpe 0.44, beta ≈ +0.09 (market-neutral confirmed) |
-| 6 | Walk-forward backtest (frozen VAE, rolling) | ⏳ Next | Chains the pipeline into one continuous out-of-sample equity curve — the dissertation's headline result |
-| 7 | Pair persistence & turnover | ⏳ Pending | How long pairs stay reliable; turnover vs a volatility proxy (VIX / realised vol) |
-| 8 | Transaction costs | ⏳ Pending | Commission + slippage on every trade; net-of-cost equity curve |
-| 9 | Benchmark: VAE vs GARCH vs Correlation vs Buy & Hold | ⏳ Pending | Re-runs the full chain with GARCH and a plain rolling-correlation selector in place of the VAE, to test whether the extra complexity earns its keep |
-| 10 | Results compilation & write-up | ⏳ Pending | Final figures, tables, dissertation chapters |
+| 6 | Walk-forward backtest (frozen VAE, rolling) | 🔧 Built — awaiting run | 27 quarterly rebalances (Oct-2019 → Mar-2026) chained into one continuous out-of-sample equity curve — the dissertation's headline result |
+| 7 | Pair persistence & turnover | 🔧 Built — awaiting run | How long pairs stay reliable; turnover vs prior-quarter realised volatility |
+| 8 | Transaction costs | 🔧 Built — awaiting run | 2 bp commission + 5 bp slippage per side on every pound traded; net-of-cost equity curve + stress test |
+| 9 | Benchmark: VAE vs GARCH vs Correlation vs Buy & Hold | 🔧 Built — awaiting run | Re-runs the identical walk-forward engine with GARCH and a plain correlation selector in place of the VAE, to test whether the extra complexity earns its keep |
+| 10 | Results compilation & write-up | 🔧 Built — awaiting run | 7 publication figures + headline-numbers table, regenerated from saved artefacts |
 
 Note: the Phase 9 benchmark originally planned to compare the VAE against PCA (a linear encoder). On
 the supervisor's suggestion this was simplified to **GARCH** — a classical volatility model — as a
@@ -59,6 +59,10 @@ fairer, simpler "does the AI earn its keep" baseline.
 ---
 
 ## Problems encountered, and how they were fixed
+
+> The complete running log — including design hurdles from the walk-forward build and everything
+> found in the July-2026 repository audit — lives in [`problems_log.md`](problems_log.md), formatted
+> for viva and interview answers.
 
 **HDBSCAN's first attempt collapsed everything into one giant cluster.** No hyperparameter setting
 produced sensible groups. Root cause, found by inspection: clustering was run on each stock's
@@ -94,14 +98,16 @@ computed on the non-noise subset only, with guardrails (silhouette > 0, ≥5 clu
 
 ## What's left
 
-- **Walk-forward backtest** — the current Phase 5 results are a single, static train/test split. Phase
-  6 re-runs the whole chain on a rolling quarterly schedule across 2020+ (frozen VAE, but clusters and
-  pairs refreshed every quarter) into one continuous, realistic equity curve.
-- **Realistic costs** — all current returns are gross of trading costs.
-- **Proving the ML step is worth it** — Phase 9 benchmarks the VAE against GARCH, plain
-  rolling-correlation, and buy-and-hold, on identical windows and costs.
+The Phase 6–10 notebooks are **built and verified** (syntax checks, a synthetic-data smoke test of
+the walk-forward engine, and an input/output chain audit); what remains is running them, in order:
 
-Target completion: September 2026.
+1. `walk_forward.ipynb` — the rolling quarterly walk-forward (headline result)
+2. `pair_persistence.ipynb` — pair survival, lifetimes, turnover vs market stress
+3. `transaction_costs.ipynb` — the net-of-costs verdict
+4. `benchmark.ipynb` — VAE vs GARCH vs correlation vs buy-and-hold (slow cell ~10–15 min)
+5. `results_compilation.ipynb` — final figures + headline numbers into `results/`
+
+— then the write-up. Target completion: September 2026.
 
 ---
 
@@ -119,8 +125,16 @@ latent_inspection.ipynb     Phase 2
 hdbscan_clustering.ipynb    Phase 3
 cointegration.ipynb         Phase 4
 strategy.ipynb              Phase 5
+walk_forward.ipynb          Phase 6  (writes walkforward.py, the shared engine)
+pair_persistence.ipynb      Phase 7
+transaction_costs.ipynb     Phase 8
+benchmark.ipynb             Phase 9
+results_compilation.ipynb   Phase 10 (writes results/)
 dissertation_project_phases_v2.md   full 10-phase methodology
 Project Proposal.docx       original approved research proposal
+problems_log.md             every problem faced + fix (viva / interview material)
+future_work.md              deferred ideas for the Discussion chapter
+requirements.txt            Python dependencies (torch installed separately, see below)
 ```
 
 ---
@@ -129,10 +143,10 @@ Project Proposal.docx       original approved research proposal
 
 ```
 pip install -r requirements.txt
-pip install torch --index-url https://download.pytorch.org/whl/cu126
+pip install torch --index-url https://download.pytorch.org/whl/cu121
 ```
 
-Developed on an NVIDIA RTX 3060 Laptop GPU (6 GB), CUDA 12.7, PyTorch cu126. Data via `yfinance`
+Developed on an NVIDIA RTX 3060 Laptop GPU (6 GB), CUDA 12.7, PyTorch cu121. Data via `yfinance`
 (Yahoo Finance), free and licensed for research use.
 
 ---

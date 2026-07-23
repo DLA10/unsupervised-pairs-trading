@@ -1,0 +1,18 @@
+# Python 3.11. Install with:  pip install -r requirements.txt
+# PyTorch is installed separately with its CUDA build (see README):
+#   pip install torch --index-url https://download.pytorch.org/whl/cu121
+yfinance
+pandas
+numpy
+pyarrow
+requests
+lxml
+matplotlib
+scipy
+scikit-learn
+statsmodels
+hdbscan
+umap-learn
+arch
+markdown
+jupyter

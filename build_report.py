@@ -333,9 +333,10 @@ NEXT = [
      "and go, and see whether pairs change more during market stress."),
     ("Phase 8 — Trading costs", "Apply realistic commission and slippage to every trade and check whether "
      "the strategy still makes money after fees."),
-    ("Phase 9 — Benchmark comparison", "Run the exact same pipeline with simpler engines — a basic linear "
-     "version, a plain price-correlation version, and a buy-and-hold baseline — to prove the machine-"
-     "learning approach actually adds value."),
+    ("Phase 9 — Benchmark comparison", "Run the exact same pipeline with simpler engines — a classical "
+     "volatility model (GARCH) in place of the neural network, a plain price-correlation version, and a "
+     "buy-and-hold baseline — to prove the machine-learning approach actually adds value. (The comparator "
+     "was changed from PCA to GARCH on the supervisor's guidance.)"),
     ("Phase 10 — Results &amp; write-up", "Compile the final figures, tables and summary statistics into "
      "the dissertation chapters."),
 ]
