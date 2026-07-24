@@ -15,4 +15,5 @@ hdbscan
 umap-learn
 arch
 markdown
+tabulate
 jupyter

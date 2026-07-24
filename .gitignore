@@ -1,6 +1,9 @@
 # Data files
 data/
 
+# Dissertation text stays local (public repo would let Turnitin match the submission)
+dissertation_draft.md
+
 # Jupyter
 .ipynb_checkpoints/
 

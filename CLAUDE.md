@@ -164,7 +164,12 @@ Run order (each notebook reads the previous ones' saved artifacts):
 2. `pair_persistence.ipynb` — needs `wf_pairs.csv`
 3. `transaction_costs.ipynb` — needs `wf_returns/wf_turnover`
 4. `benchmark.ipynb` — needs `walkforward.py` + `cost_summary.csv` (slow cell ~10–15 min)
-5. `results_compilation.ipynb` — needs everything above; writes `results/`
+5. `results_compilation.ipynb` — needs everything above; writes `results/` (figures F1–F9 + tables T5–T10)
+
+Also re-run once, to render the explanatory figures added 2026-07-24 (all deterministic, same
+numbers): `data_cleaning`, `feature_engineering`, `latent_inspection`, `hdbscan_clustering`,
+`cointegration`, `strategy`. **Never re-run** `data_download` (would refresh the dataset) or
+`vae_training` (frozen weights; deliberately left untouched).
 
 After each run: share the outputs, red flags get reviewed, the phase row above gets its Key result,
 and any new problem goes into `problems_log.md` (the viva/interview log of every hurdle + fix).
