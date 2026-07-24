@@ -133,6 +133,7 @@ results_compilation.ipynb   Phase 10 (writes results/)
 dissertation_project_phases_v2.md   full 10-phase methodology
 Project Proposal.docx       original approved research proposal
 dissertation_draft.md       full dissertation draft — kept local & untracked (not published), see .gitignore
+build_submission.py         merges the 13 notebooks into the 1-2 upload files (submission/, generated)
 problems_log.md             every problem faced + fix (viva / interview material)
 future_work.md              deferred ideas for the Discussion chapter
 requirements.txt            Python dependencies (torch installed separately, see below)

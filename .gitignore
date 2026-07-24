@@ -4,6 +4,9 @@ data/
 # Dissertation text stays local (public repo would let Turnitin match the submission)
 dissertation_draft.md
 
+# Generated upload bundles (rebuild with: python build_submission.py)
+submission/
+
 # Jupyter
 .ipynb_checkpoints/
 

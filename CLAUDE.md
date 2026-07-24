@@ -171,6 +171,12 @@ numbers): `data_cleaning`, `feature_engineering`, `latent_inspection`, `hdbscan_
 `cointegration`, `strategy`. **Never re-run** `data_download` (would refresh the dataset) or
 `vae_training` (frozen weights; deliberately left untouched).
 
+**University upload (1–2 notebook limit):** after all runs, `python build_submission.py` merges the
+13 notebooks in pipeline order — outputs preserved, title + contents + phase dividers added — into
+`submission/part1_foundation.ipynb` (Phases 1–5) and `submission/part2_evaluation.ipynb`
+(Phases 6–10); `--one` produces a single `submission/full_pipeline.ipynb` instead. Rebuild any time;
+`submission/` is gitignored (generated).
+
 After each run: share the outputs, red flags get reviewed, the phase row above gets its Key result,
 and any new problem goes into `problems_log.md` (the viva/interview log of every hurdle + fix).
 Design decisions for Phases 6–9 (window-grid calendar, fixed 10% sleeves, quarter-end force-close,
